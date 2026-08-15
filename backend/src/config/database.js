@@ -46,7 +46,7 @@ function getPool() {
 // ── SQL dialect: MySQL → PostgreSQL ──────────────────────────────────────────
 function pgify(sql) {
   let i = 0;
-  return sql
+  const sql2 = sql
     // 1. MySQL double-quoted string literals → PostgreSQL single-quoted
     //    e.g.  status = "active"  →  status = 'active'
     .replace(/"([^"\n\\]+)"/g, "'$1'")
@@ -88,8 +88,23 @@ function pgify(sql) {
     .replace(/<=> /g, 'IS NOT DISTINCT FROM ')
     .replace(/<=>/g,  'IS NOT DISTINCT FROM')
 
-    // 8. ? placeholders → $1, $2, …
+    // 8. Boolean column comparisons: is_xxx/has_xxx = 1 → true, = 0 → false
+    //    PostgreSQL BOOLEAN columns reject integer 1/0 — must use true/false literals.
+    //    Handles WHERE, SET, and CASE WHEN clauses.
+    .replace(/\b((?:is|has)_[a-z_]+)\s*(=|!=|<>)\s*([01])\b/g, (_, col, op, val) =>
+      `${col} ${op} ${val === '1' ? 'true' : 'false'}`
+    )
+
+    // 9. ? placeholders → $1, $2, …
     .replace(/\?/g, () => `$${++i}`);
+
+  // 10. Cast $N params to ::boolean for is_xxx/has_xxx column comparisons.
+  //     Handles JS values 0/1 passed as integer params for BOOLEAN columns.
+  //     e.g.  is_available = $3  →  is_available = $3::boolean
+  return sql2.replace(
+    /\b((?:is|has)_[a-z_]+)\s*(=|!=|<>)\s*(\$\d+)\b/g,
+    '$1 $2 $3::boolean'
+  );
 }
 
 // ── Wrap a pg QueryResult into a mysql2-compatible tuple ─────────────────────

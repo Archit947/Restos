@@ -60,7 +60,7 @@ app.use(helmet({
 }));
 
 // CORS
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || env.CORS.ALLOWED_ORIGINS.includes(origin)) {
       callback(null, true);
@@ -71,7 +71,10 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-}));
+};
+app.use(cors(corsOptions));
+// Explicitly handle OPTIONS preflight for all routes
+app.options('*', cors(corsOptions));
 
 // ============================================================
 // General Middleware
