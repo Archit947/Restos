@@ -7,6 +7,7 @@ import { Button } from '@/components/common/Button';
 import { ConfirmDialog, Modal } from '@/components/common/Modal';
 import { Input, Select } from '@/components/common/Input';
 import { Card } from '@/components/common/Card';
+import { imageUrl } from '@/utils/imageUrl';
 import type { WebsiteTemplate } from '@/types';
 import { clsx } from 'clsx';
 
@@ -73,7 +74,7 @@ export function TemplateListPage() {
             <div key={template.id} className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden hover:shadow-card-hover transition-shadow">
               <div className={clsx('h-32 flex items-center justify-center', 'bg-gradient-to-br from-gray-100 to-gray-200')}>
                 {template.thumbnail ? (
-                  <img src={`/uploads/templates/${template.thumbnail}`} alt={template.name} className="h-full w-full object-cover" />
+                  <img src={imageUrl(`/uploads/templates/${template.thumbnail}`)!} alt={template.name} className="h-full w-full object-cover" />
                 ) : (
                   <div className="text-5xl opacity-20 select-none">🎨</div>
                 )}
