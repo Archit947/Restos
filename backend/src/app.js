@@ -12,7 +12,7 @@ const cookieParser = require('cookie-parser');
 
 const env = require('./config/env');
 const logger = require('./utils/logger');
-const { generalLimiter } = require('./middleware/rateLimiter.middleware');
+const { generalLimiter, publicLimiter } = require('./middleware/rateLimiter.middleware');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler.middleware');
 
 // Route imports — Super Admin
@@ -130,7 +130,7 @@ app.use(`${apiBase}/notifications`, notificationRoutes);
 app.use(`${apiBase}/settings`, settingsRoutes);
 
 // ── Public Website routes (no auth) ──
-app.use(`${apiBase}/public`, publicRoutes);
+app.use(`${apiBase}/public`, publicLimiter, publicRoutes);
 
 // ── Affiliate Ads (admin + public sub-routes inside the module) ──
 app.use(`${apiBase}/affiliate`, affiliateRoutes);

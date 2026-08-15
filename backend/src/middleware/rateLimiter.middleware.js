@@ -4,7 +4,8 @@ const rateLimit = require('express-rate-limit');
 const env = require('../config/env');
 
 /**
- * General API rate limiter.
+ * General API rate limiter — skips public restaurant routes so customer-facing
+ * pages (which fire 4-5 parallel requests on load) are never throttled.
  */
 const generalLimiter = rateLimit({
   windowMs: env.RATE_LIMIT.WINDOW_MS,
@@ -15,7 +16,24 @@ const generalLimiter = rateLimit({
     success: false,
     message: 'Too many requests. Please try again later.',
   },
-  skip: (req) => req.path === '/health', // Skip health checks
+  skip: (req) =>
+    req.path === '/health' ||           // health check
+    req.path.startsWith('/public/'),    // public restaurant pages
+});
+
+/**
+ * Lenient limiter for public restaurant endpoints.
+ * 300 req / 15 min per IP — covers heavy multi-request page loads.
+ */
+const publicLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests. Please try again later.',
+  },
 });
 
 /**
@@ -47,4 +65,4 @@ const uploadLimiter = rateLimit({
   },
 });
 
-module.exports = { generalLimiter, authLimiter, uploadLimiter };
+module.exports = { generalLimiter, authLimiter, uploadLimiter, publicLimiter };
