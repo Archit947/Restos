@@ -220,7 +220,7 @@ async function createRestaurant(data, adminUser, req) {
         tenantId, restaurant_name, business_name || null, owner_name, email.toLowerCase(), phone,
         whatsapp || null, gst_number || null, pan_number || null, business_reg_no || null,
         cuisine_type || null, description || null, logo || null, cover_image || null,
-        status, plan.id, adminUser.id, has_store ? 1 : 0,
+        status, plan.id, adminUser.id, has_store,
       ]
     );
 
@@ -242,7 +242,7 @@ async function createRestaurant(data, adminUser, req) {
 
     // 4. Insert subdomain
     await conn.execute(
-      'INSERT INTO subdomains (restaurant_id, tenant_id, subdomain, full_domain, is_active) VALUES (?, ?, ?, ?, 1)',
+      'INSERT INTO subdomains (restaurant_id, tenant_id, subdomain, full_domain, is_active) VALUES (?, ?, ?, ?, TRUE)',
       [restaurantId, tenantId, subdomain, fullDomain]
     );
 
@@ -276,7 +276,7 @@ async function createRestaurant(data, adminUser, req) {
     await conn.execute(
       `INSERT INTO restaurant_credentials
        (restaurant_id, tenant_id, restaurant_uid, username, password_hash, temp_password, is_active, is_first_login)
-       VALUES (?, ?, ?, ?, ?, ?, 1, 1)`,
+       VALUES (?, ?, ?, ?, ?, ?, TRUE, TRUE)`,
       [restaurantId, tenantId, restaurantUID, username, passwordHash, tempPassword]
     );
 
@@ -290,7 +290,7 @@ async function createRestaurant(data, adminUser, req) {
       await conn.execute(
         `INSERT INTO store_credentials
          (restaurant_id, tenant_id, username, password_hash, temp_password, is_active, is_first_login)
-         VALUES (?, ?, ?, ?, ?, 1, 1)`,
+         VALUES (?, ?, ?, ?, ?, TRUE, TRUE)`,
         [restaurantId, tenantId, storeUsername, storePasswordHash, storeTempPassword]
       );
     }

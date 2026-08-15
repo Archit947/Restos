@@ -23,7 +23,7 @@ async function createTenantWorkspace(restaurantData, connection) {
   const templateSlug = restaurantData.template_slug || 'bloom';
   await connection.execute(
     `INSERT INTO websites (restaurant_id, tenant_id, template_id, template_slug, title, subtitle, status, is_enabled)
-     VALUES (?, ?, ?, ?, ?, ?, 'draft', 1)`,
+     VALUES (?, ?, ?, ?, ?, ?, 'draft', TRUE)`,
     [
       restaurantId,
       tenantId,
