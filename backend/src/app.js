@@ -99,7 +99,12 @@ app.use(`/api/${env.API_VERSION}`, generalLimiter);
 // ============================================================
 // Static Files (uploads)
 // ============================================================
-app.use('/uploads', express.static(path.resolve(env.UPLOAD.PATH)));
+// Set Cross-Origin-Resource-Policy: cross-origin so browsers on other origins
+// (e.g. Vercel frontend) can load images served from this Render backend.
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.resolve(env.UPLOAD.PATH)));
 
 // ============================================================
 // Health Check
