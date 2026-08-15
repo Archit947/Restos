@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment — NEVER commit real credentials
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Build output
+frontend/dist/
+frontend/dist-ssr/
+
+# Uploads (runtime data, not code)
+backend/uploads/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.sw?
