@@ -177,8 +177,7 @@ export const uploadItemImage = async (req: Request, res: Response, next: NextFun
       return;
     }
 
-    const backendUrl = config.platform.url;
-    const fileUrl = `${backendUrl}/uploads/${req.file.filename}`;
+    const fileUrl = (req.file as any).publicUrl;
 
     res.json({ success: true, message: 'Image uploaded successfully', url: fileUrl });
   } catch (error) {

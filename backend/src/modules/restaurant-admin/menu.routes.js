@@ -288,7 +288,7 @@ router.post('/upload-image', upload.single('image'), (req, res) => {
     }
     // Return a root-relative path — the frontend resolves it against the backend origin.
     // This avoids hardcoding the hostname and keeps URLs portable across environments.
-    const fileUrl = `/uploads/${req.file.filename}`;
+    const fileUrl = req.file.publicUrl;
     return success(res, { url: fileUrl }, 'Image uploaded successfully');
   } catch (err) {
     return serverError(res, err.message);

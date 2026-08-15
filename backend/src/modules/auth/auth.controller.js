@@ -88,7 +88,7 @@ async function updateProfile(req, res) {
   try {
     const { name } = req.body;
     let avatar = undefined;
-    if (req.file) avatar = req.file.filename;
+    if (req.file) avatar = req.file.publicUrl;
 
     const updated = await authService.updateProfile(req.user.id, { name, avatar });
     return success(res, updated, 'Profile updated successfully.');

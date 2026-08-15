@@ -59,7 +59,7 @@ router.post('/', requireAdmin, handleUpload(uploadTemplateThumbnail), async (req
     if (!name) return res.status(400).json({ success: false, message: 'Name is required.' });
 
     const slug = generateSlug(name);
-    const thumbnail = req.file ? req.file.filename : null;
+    const thumbnail = req.file ? req.file.publicUrl : null;
 
     const [result] = await query(
       `INSERT INTO website_templates (name, slug, description, thumbnail, category, version, is_active, config, created_by)
@@ -86,7 +86,7 @@ router.post('/', requireAdmin, handleUpload(uploadTemplateThumbnail), async (req
 router.put('/:id', requireAdmin, handleUpload(uploadTemplateThumbnail), async (req, res) => {
   try {
     const { name, description, category, version, is_active, config } = req.body;
-    const thumbnail = req.file ? req.file.filename : undefined;
+    const thumbnail = req.file ? req.file.publicUrl : undefined;
 
     await query(
       `UPDATE website_templates SET

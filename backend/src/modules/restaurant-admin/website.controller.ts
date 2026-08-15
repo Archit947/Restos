@@ -135,8 +135,7 @@ export const uploadWebsiteImage = (imageType: 'logo' | 'cover') => {
         return;
       }
 
-      const backendUrl = config.platform.url;
-      const fileUrl = `${backendUrl}/uploads/${req.file.filename}`;
+      const fileUrl = (req.file as any).publicUrl;
 
       const column = imageType === 'logo' ? 'logo_url' : 'cover_image_url';
       await execute(`UPDATE restaurants SET ${column} = ? WHERE id = ?`, [fileUrl, restaurantId]);

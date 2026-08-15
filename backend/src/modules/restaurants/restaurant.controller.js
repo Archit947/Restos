@@ -31,8 +31,8 @@ async function create(req, res) {
 
     // Handle file uploads
     if (req.files) {
-      if (req.files.logo) data.logo = req.files.logo[0].filename;
-      if (req.files.cover_image) data.cover_image = req.files.cover_image[0].filename;
+      if (req.files.logo) data.logo = req.files.logo[0].publicUrl;
+      if (req.files.cover_image) data.cover_image = req.files.cover_image[0].publicUrl;
     }
 
     const result = await service.createRestaurant(data, req.user, req);
@@ -47,8 +47,8 @@ async function update(req, res) {
   try {
     const data = { ...req.body };
     if (req.files) {
-      if (req.files.logo) data.logo = req.files.logo[0].filename;
-      if (req.files.cover_image) data.cover_image = req.files.cover_image[0].filename;
+      if (req.files.logo) data.logo = req.files.logo[0].publicUrl;
+      if (req.files.cover_image) data.cover_image = req.files.cover_image[0].publicUrl;
     }
     const restaurant = await service.updateRestaurant(req.params.id, data, req.user, req);
     return success(res, restaurant, 'Restaurant updated successfully.');

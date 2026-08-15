@@ -12,6 +12,12 @@ const env = {
   // Supabase / PostgreSQL connection string (takes precedence over individual vars)
   DATABASE_URL: process.env.DATABASE_URL || null,
 
+  SUPABASE: {
+    URL:         process.env.SUPABASE_URL         || '',
+    SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY || '',
+    BUCKET:      process.env.SUPABASE_BUCKET      || 'restos-uploads',
+  },
+
   DB: {
     HOST: process.env.DB_HOST || 'localhost',
     PORT: parseInt(process.env.DB_PORT, 10) || 5432,

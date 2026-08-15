@@ -42,16 +42,16 @@ router.patch('/branding', (req, res, next) => {
     const result     = {};
 
     if (req.files?.logo?.[0]) {
-      const filename = req.files.logo[0].filename;
+      const publicUrl = req.files.logo[0].publicUrl;
       setClauses.push('logo = ?');
-      params.push(filename);
-      result.logo = `/uploads/restaurants/${filename}`;
+      params.push(publicUrl);
+      result.logo = publicUrl;
     }
     if (req.files?.cover_image?.[0]) {
-      const filename = req.files.cover_image[0].filename;
+      const publicUrl = req.files.cover_image[0].publicUrl;
       setClauses.push('cover_image = ?');
-      params.push(filename);
-      result.cover_image = `/uploads/restaurants/${filename}`;
+      params.push(publicUrl);
+      result.cover_image = publicUrl;
     }
 
     if (!setClauses.length) return badRequest(res, 'No image file provided.');
