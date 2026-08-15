@@ -13,7 +13,7 @@ async function startServer() {
   // Test database connectivity first
   const dbConnected = await testConnection();
   if (!dbConnected) {
-    logger.error('❌ Cannot connect to database. Ensure MySQL is running and .env is configured correctly.');
+    logger.error('❌ Cannot connect to database. Ensure DATABASE_URL (Supabase) is set correctly in environment variables.');
     process.exit(1);
   }
 
