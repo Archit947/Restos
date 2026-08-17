@@ -35,6 +35,13 @@ function imageUrlFromFilename(filename) {
   return `/uploads/store/${filename}`;
 }
 
+// FormData sends booleans as strings "1"/"0"/"true"/"false"; pg BOOLEAN needs a JS boolean.
+function parseBool(val, defaultVal = false) {
+  if (val === undefined || val === null) return defaultVal;
+  if (typeof val === 'boolean') return val;
+  return val === '1' || val === 'true' || val === 1;
+}
+
 // ════════════════════════════════════════════════════════════════
 // CATEGORIES
 // ════════════════════════════════════════════════════════════════
@@ -155,7 +162,7 @@ router.post('/', withUpload, async (req, res) => {
         category_id || null, name.trim(), description || null,
         Number(price), currency, imageFilename,
         Number(stock_quantity),
-        Number(is_available), Number(is_featured), Number(sort_order),
+        parseBool(is_available, true), parseBool(is_featured, false), Number(sort_order),
       ]
     );
     const item = await queryOne('SELECT * FROM store_items WHERE id = ?', [result.insertId]);
@@ -195,8 +202,8 @@ router.patch('/:id', withUpload, async (req, res) => {
         name || null, description ?? null, price ? Number(price) : null, currency || null,
         category_id ?? null,
         stock_quantity !== undefined ? Number(stock_quantity) : null,
-        is_available !== undefined ? Number(is_available) : null,
-        is_featured !== undefined ? Number(is_featured) : null,
+        is_available !== undefined ? parseBool(is_available, true) : null,
+        is_featured !== undefined ? parseBool(is_featured, false) : null,
         sort_order !== undefined ? Number(sort_order) : null,
         ...(imageFilename ? [imageFilename] : []),
         req.params.id,
