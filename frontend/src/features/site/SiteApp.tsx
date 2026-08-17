@@ -21,10 +21,12 @@ function SiteLoader() {
   const { subdomain } = useParams<{ subdomain: string }>();
   const sub = subdomain!;
 
-  const infoQ = useQuery({ queryKey: ['site-info', sub], queryFn: () => publicApi.getInfo(sub).then(r => r.data.data) });
-  const menuQ = useQuery({ queryKey: ['site-menu', sub], queryFn: () => publicApi.getMenu(sub).then(r => r.data.data) });
-  const eventsQ = useQuery({ queryKey: ['site-events', sub], queryFn: () => publicApi.getEvents(sub).then(r => r.data.data) });
-  const blogQ = useQuery({ queryKey: ['site-blog', sub], queryFn: () => publicApi.getBlog(sub).then(r => r.data.data) });
+  const infoQ    = useQuery({ queryKey: ['site-info',    sub], queryFn: () => publicApi.getInfo(sub).then(r => r.data.data) });
+  const menuQ    = useQuery({ queryKey: ['site-menu',    sub], queryFn: () => publicApi.getMenu(sub).then(r => r.data.data) });
+  const eventsQ  = useQuery({ queryKey: ['site-events',  sub], queryFn: () => publicApi.getEvents(sub).then(r => r.data.data) });
+  const blogQ    = useQuery({ queryKey: ['site-blog',    sub], queryFn: () => publicApi.getBlog(sub).then(r => r.data.data) });
+  const aboutQ   = useQuery({ queryKey: ['site-about',   sub], queryFn: () => publicApi.getAboutContent(sub).then(r => r.data.data), staleTime: 5 * 60 * 1000 });
+  const reviewsQ = useQuery({ queryKey: ['site-reviews', sub], queryFn: () => publicApi.getReviews(sub).then(r => r.data.data),      staleTime: 2 * 60 * 1000 });
 
   const { addItem, items: cartItems, count, setOpen } = useCartStore();
 
@@ -56,8 +58,10 @@ function SiteLoader() {
   const templateId = restaurant?.template_slug || 'bloom';
   const categories: any[] = menuQ.data?.categories || [];
   const menuItems: any[] = menuQ.data?.items || [];
-  const events: any[] = eventsQ.data || [];
-  const posts: any[] = blogQ.data || [];
+  const events: any[]    = eventsQ.data || [];
+  const posts: any[]     = blogQ.data || [];
+  const blocks: any[]    = aboutQ.data?.blocks || [];
+  const reviews: any[]   = reviewsQ.data || [];
 
   const handleAddToCart = (item: any) => {
     addItem({ id: item.id, name: item.name, price: Number(item.price), currency: item.currency || '₹', is_veg: item.is_veg });
@@ -71,13 +75,13 @@ function SiteLoader() {
       {/* Pearl hero overlaps the sticky nav (nav is transparent at top). Other themes need the padding offset. */}
       <div style={{ paddingTop: templateId === 'pearl' ? 0 : 64 }}>
         <Routes>
-          <Route index element={<HomePage subdomain={sub} restaurant={restaurant} menuItems={menuItems} />} />
+          <Route index element={<HomePage subdomain={sub} restaurant={restaurant} menuItems={menuItems} reviews={reviews} />} />
           <Route path="menu" element={
             <FoodMenuPage subdomain={sub} categories={categories} items={menuItems} cart={cartItems} onAddToCart={handleAddToCart} />
           } />
           <Route path="events" element={<EventsPage subdomain={sub} events={events} />} />
           <Route path="blog" element={<BlogPage subdomain={sub} posts={posts} />} />
-          <Route path="about" element={<AboutPage restaurant={restaurant} hours={hours || []} address={address} />} />
+          <Route path="about" element={<AboutPage restaurant={restaurant} hours={hours || []} address={address} blocks={blocks} />} />
           <Route path="track" element={<TrackPage subdomain={sub} />} />
           <Route path="book"  element={<BookTablePage subdomain={sub} restaurant={restaurant} />} />
           <Route path="store" element={<StorePage subdomain={sub} />} />

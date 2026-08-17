@@ -16,4 +16,7 @@ export const publicApi = {
   trackOrder:      (sub: string, orderNumber: string) => pub.get(`/${sub}/orders/${orderNumber}`),
   getStore:        (sub: string) => pub.get(`/${sub}/store`),
   placeStoreOrder: (sub: string, data: object) => pub.post(`/${sub}/store/orders`, data),
+  getAboutContent: (sub: string) => pub.get(`/${sub}/about-content`),
+  getReviews:      (sub: string) => pub.get(`/${sub}/reviews`),
+  submitReview:    (sub: string, data: object) => pub.post(`/${sub}/reviews`, data),
 };

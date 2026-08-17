@@ -27,6 +27,25 @@ export default function TrackPage({ subdomain }: Props) {
   const [order, setOrder] = useState<any>(null);
   const [err, setErr] = useState('');
 
+  // Review form state
+  const [reviewForm, setReviewForm] = useState({ customer_name: '', review_text: '', rating: 5 });
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewErr, setReviewErr] = useState('');
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+  const submitReview = async () => {
+    if (!reviewForm.customer_name.trim() || !reviewForm.review_text.trim()) {
+      setReviewErr('Please enter your name and review.'); return;
+    }
+    setReviewLoading(true); setReviewErr('');
+    try {
+      await publicApi.submitReview(subdomain, { ...reviewForm, order_number: order?.order_number });
+      setReviewSubmitted(true);
+    } catch (e: any) {
+      setReviewErr(e.response?.data?.message || 'Failed to submit review. Please try again.');
+    } finally { setReviewLoading(false); }
+  };
+
   const track = async () => {
     if (!orderNum.trim()) return;
     setLoading(true); setErr(''); setOrder(null);
@@ -76,6 +95,7 @@ export default function TrackPage({ subdomain }: Props) {
       </div>
 
       {order && (
+        <>
         <div style={{ backgroundColor: 'var(--s-bg2)', border: '1px solid var(--s-border)', borderRadius: 'var(--s-radius)', padding: 28 }}>
           {/* Order header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
@@ -161,6 +181,95 @@ export default function TrackPage({ subdomain }: Props) {
             )}
           </div>
         </div>
+
+        {order.status === 'delivered' && (
+          <div style={{
+            backgroundColor: 'var(--s-bg2)', border: '1px solid var(--s-border)',
+            borderRadius: 'var(--s-radius)', padding: 28, marginTop: 20,
+          }}>
+            {reviewSubmitted ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
+                <h3 style={{ fontFamily: 'var(--s-heading-font)', fontSize: 20, color: 'var(--s-text)', marginBottom: 8 }}>
+                  Thank you for your review!
+                </h3>
+                <p style={{ fontSize: 14, color: 'var(--s-muted)' }}>Your feedback helps other customers and means a lot to us.</p>
+              </div>
+            ) : (
+              <>
+                <h3 style={{ fontFamily: 'var(--s-heading-font)', fontSize: 18, fontWeight: 600, color: 'var(--s-text)', marginBottom: 6 }}>
+                  How was your experience?
+                </h3>
+                <p style={{ fontSize: 13, color: 'var(--s-muted)', marginBottom: 20 }}>Leave a review to help us improve.</p>
+
+                {/* Star rating */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--s-muted)', marginBottom: 8, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Rating</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <button key={n} onClick={() => setReviewForm(f => ({ ...f, rating: n }))}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 28, padding: 2, lineHeight: 1, opacity: n <= reviewForm.rating ? 1 : 0.25, transition: 'opacity 0.15s' }}>
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Name */}
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--s-muted)', marginBottom: 6, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Your Name</label>
+                  <input
+                    value={reviewForm.customer_name}
+                    onChange={e => setReviewForm(f => ({ ...f, customer_name: e.target.value }))}
+                    placeholder="e.g. Priya S."
+                    style={{
+                      width: '100%', padding: '10px 14px', borderRadius: 'var(--s-radius-sm)',
+                      border: '1px solid var(--s-border)', backgroundColor: 'var(--s-bg3)',
+                      color: 'var(--s-text)', fontFamily: 'var(--s-body-font)', fontSize: 14,
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                {/* Review text */}
+                <div style={{ marginBottom: 18 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--s-muted)', marginBottom: 6, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Your Review</label>
+                  <textarea
+                    value={reviewForm.review_text}
+                    onChange={e => setReviewForm(f => ({ ...f, review_text: e.target.value }))}
+                    placeholder="Tell us about your experience…"
+                    rows={4}
+                    style={{
+                      width: '100%', padding: '10px 14px', borderRadius: 'var(--s-radius-sm)',
+                      border: '1px solid var(--s-border)', backgroundColor: 'var(--s-bg3)',
+                      color: 'var(--s-text)', fontFamily: 'var(--s-body-font)', fontSize: 14,
+                      resize: 'vertical', boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                {reviewErr && (
+                  <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 14, padding: '8px 12px', backgroundColor: 'rgba(239,68,68,0.08)', borderRadius: 4 }}>
+                    {reviewErr}
+                  </p>
+                )}
+
+                <button
+                  onClick={submitReview} disabled={reviewLoading}
+                  style={{
+                    padding: '11px 28px', borderRadius: 'var(--s-radius-sm)', border: 'none',
+                    backgroundColor: 'var(--s-primary)', color: '#fff',
+                    fontFamily: 'var(--s-body-font)', fontWeight: 600, fontSize: 14,
+                    cursor: reviewLoading ? 'not-allowed' : 'pointer', opacity: reviewLoading ? 0.7 : 1,
+                  }}
+                >
+                  {reviewLoading ? 'Submitting…' : 'Submit Review'}
+                </button>
+              </>
+            )}
+          </div>
+        )}
+        </>
       )}
     </div>
   );

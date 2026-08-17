@@ -11,6 +11,16 @@ const { success, created, badRequest, notFound, serverError } = require('../../u
 
 router.use(authenticateRestaurant);
 
+// Single image uploader for About page blocks
+const aboutImageUpload = multer({
+  storage: createStorage('about'),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Only JPEG, PNG, WebP images are allowed.'), false);
+  },
+}).single('image');
+
 // Multi-field uploader for restaurant branding images
 const brandingUpload = multer({
   storage: createStorage('restaurants'),
@@ -498,6 +508,72 @@ router.delete('/events/:id', async (req, res) => {
   } catch (err) {
     return serverError(res, err.message);
   }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ABOUT PAGE CONTENT
+// ═══════════════════════════════════════════════════════════════
+
+router.get('/about-page', async (req, res) => {
+  try {
+    const site = await queryOne('SELECT about_content FROM websites WHERE restaurant_id = ?', [req.restaurant.id]);
+    let blocks = [];
+    try { blocks = site?.about_content ? JSON.parse(site.about_content) : []; } catch {}
+    return success(res, { blocks });
+  } catch (err) { return serverError(res, err.message); }
+});
+
+router.put('/about-page', async (req, res) => {
+  try {
+    const { blocks } = req.body;
+    await query(
+      'UPDATE websites SET about_content = ? WHERE restaurant_id = ?',
+      [JSON.stringify(blocks || []), req.restaurant.id]
+    );
+    return success(res, null, 'About page saved.');
+  } catch (err) { return serverError(res, err.message); }
+});
+
+router.post('/about-image', (req, res, next) => {
+  aboutImageUpload(req, res, (err) => {
+    if (err) return badRequest(res, err.message || 'Image upload failed.');
+    next();
+  });
+}, async (req, res) => {
+  if (!req.file) return badRequest(res, 'No image file provided.');
+  return success(res, { url: req.file.publicUrl }, 'Image uploaded.');
+});
+
+// ═══════════════════════════════════════════════════════════════
+// CUSTOMER REVIEWS (admin management)
+// ═══════════════════════════════════════════════════════════════
+
+router.get('/reviews', async (req, res) => {
+  try {
+    const [rows] = await query(
+      'SELECT * FROM restaurant_reviews WHERE restaurant_id = ? ORDER BY created_at DESC',
+      [req.restaurant.id]
+    );
+    return success(res, rows);
+  } catch (err) { return serverError(res, err.message); }
+});
+
+router.patch('/reviews/:id', async (req, res) => {
+  try {
+    const { is_approved } = req.body;
+    await query(
+      'UPDATE restaurant_reviews SET is_approved = ? WHERE id = ? AND restaurant_id = ?',
+      [Boolean(is_approved), req.params.id, req.restaurant.id]
+    );
+    return success(res, null, 'Review updated.');
+  } catch (err) { return serverError(res, err.message); }
+});
+
+router.delete('/reviews/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM restaurant_reviews WHERE id = ? AND restaurant_id = ?', [req.params.id, req.restaurant.id]);
+    return success(res, null, 'Review deleted.');
+  } catch (err) { return serverError(res, err.message); }
 });
 
 module.exports = router;

@@ -8,6 +8,7 @@ interface Props {
   subdomain: string;
   restaurant: any;
   menuItems: any[];
+  reviews?: any[];
 }
 
 // ─── Hero variants ────────────────────────────────────────────────────────────
@@ -296,12 +297,14 @@ function PearlDishes({ items, subdomain }: { items: any[]; subdomain: string }) 
 }
 
 // ─── Pearl Testimonials ───────────────────────────────────────────────────────
-function PearlTestimonials() {
-  const reviews = [
-    { name: 'Priya S.',   role: 'Food Critic',      text: 'An extraordinary culinary journey. Every dish told a story of craftsmanship and passion.', stars: 5 },
-    { name: 'Rahul M.',   role: 'Regular Guest',     text: 'The finest dining experience in the city. The ambiance and flavors are simply unparalleled.', stars: 5 },
-    { name: 'Ananya K.',  role: 'Food Enthusiast',   text: 'From the moment we walked in to the last bite, perfection in every single detail.', stars: 5 },
-  ];
+const STATIC_PEARL_REVIEWS = [
+  { customer_name: 'Priya S.',  review_text: 'An extraordinary culinary journey. Every dish told a story of craftsmanship and passion.', rating: 5 },
+  { customer_name: 'Rahul M.',  review_text: 'The finest dining experience in the city. The ambiance and flavors are simply unparalleled.', rating: 5 },
+  { customer_name: 'Ananya K.', review_text: 'From the moment we walked in to the last bite, perfection in every single detail.', rating: 5 },
+];
+
+function PearlTestimonials({ reviews: propReviews }: { reviews?: any[] }) {
+  const reviews = (propReviews && propReviews.length > 0) ? propReviews.slice(0, 3) : STATIC_PEARL_REVIEWS;
 
   return (
     <section style={{ padding: '96px 28px', background: 'var(--s-bg3)', position: 'relative', overflow: 'hidden' }}>
@@ -322,13 +325,14 @@ function PearlTestimonials() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
           {reviews.map((r, i) => (
-            <div key={i} style={{ padding: '32px 28px', borderRadius: 12, background: 'var(--s-bg2)', border: '1px solid var(--s-border)', boxShadow: 'var(--s-card-shadow)' }}>
+            <div key={r.id ?? i} style={{ padding: '32px 28px', borderRadius: 12, background: 'var(--s-bg2)', border: '1px solid var(--s-border)', boxShadow: 'var(--s-card-shadow)' }}>
               <div style={{ fontSize: 28, fontFamily: 'var(--s-heading-font)', color: 'var(--s-primary)', marginBottom: 12, lineHeight: 1 }}>"</div>
-              <div style={{ color: '#c9a84c', fontSize: 13, marginBottom: 14, letterSpacing: '0.1em' }}>{'★'.repeat(r.stars)}</div>
-              <p style={{ fontFamily: 'var(--s-body-font)', fontSize: 14, color: 'var(--s-text)', lineHeight: 1.8, marginBottom: 20, fontStyle: 'italic', opacity: 0.85 }}>{r.text}</p>
+              <div style={{ color: '#c9a84c', fontSize: 13, marginBottom: 14, letterSpacing: '0.1em' }}>{'★'.repeat(r.rating ?? r.stars ?? 5)}</div>
+              <p style={{ fontFamily: 'var(--s-body-font)', fontSize: 14, color: 'var(--s-text)', lineHeight: 1.8, marginBottom: 20, fontStyle: 'italic', opacity: 0.85 }}>{r.review_text ?? r.text}</p>
               <div>
-                <p style={{ fontFamily: 'var(--s-heading-font)', fontWeight: 600, fontSize: 16, color: 'var(--s-text)', margin: 0 }}>{r.name}</p>
-                <p style={{ fontFamily: 'var(--s-body-font)', fontSize: 11, color: 'var(--s-primary)', margin: '3px 0 0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{r.role}</p>
+                <p style={{ fontFamily: 'var(--s-heading-font)', fontWeight: 600, fontSize: 16, color: 'var(--s-text)', margin: 0 }}>{r.customer_name ?? r.name}</p>
+                {r.role && <p style={{ fontFamily: 'var(--s-body-font)', fontSize: 11, color: 'var(--s-primary)', margin: '3px 0 0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{r.role}</p>}
+                {r.created_at && <p style={{ fontFamily: 'var(--s-body-font)', fontSize: 11, color: 'var(--s-muted)', margin: '3px 0 0' }}>{new Date(r.created_at).toLocaleDateString('en', { month: 'short', year: 'numeric' })}</p>}
               </div>
             </div>
           ))}
@@ -419,16 +423,18 @@ function PopularDishes({ items, subdomain }: { items: any[]; subdomain: string }
 }
 
 // ─── Testimonials section ─────────────────────────────────────────────────────
-function Testimonials() {
+const STATIC_REVIEWS = [
+  { customer_name: 'Priya S.',  review_text: 'Absolutely incredible food! The flavors were authentic and the service was impeccable.', rating: 5 },
+  { customer_name: 'Rahul M.',  review_text: 'Best dining experience in the city. Will definitely be coming back!', rating: 5 },
+  { customer_name: 'Ananya K.', review_text: 'A hidden gem. The ambiance and food exceeded all expectations.', rating: 5 },
+];
+
+function Testimonials({ reviews: propReviews }: { reviews?: any[] }) {
   const { templateId } = useTheme();
   const isLuxe = templateId === 'luxe';
   const isEmber = templateId === 'ember';
 
-  const reviews = [
-    { name: 'Priya S.', text: 'Absolutely incredible food! The flavors were authentic and the service was impeccable.', stars: 5 },
-    { name: 'Rahul M.', text: 'Best dining experience in the city. Will definitely be coming back!', stars: 5 },
-    { name: 'Ananya K.', text: 'A hidden gem. The ambiance and food exceeded all expectations.', stars: 5 },
-  ];
+  const reviews = (propReviews && propReviews.length > 0) ? propReviews.slice(0, 3) : STATIC_REVIEWS;
 
   return (
     <section style={{ padding: '80px 24px', backgroundColor: isEmber ? 'var(--s-bg2)' : isLuxe ? 'var(--s-bg)' : 'var(--s-bg3)' }}>
@@ -442,15 +448,16 @@ function Testimonials() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 24 }}>
           {reviews.map((r, i) => (
-            <div key={i} style={{
+            <div key={r.id ?? i} style={{
               backgroundColor: 'var(--s-bg2)', padding: 28, borderRadius: 'var(--s-radius)',
               border: isEmber ? '1px solid var(--s-border)' : isLuxe ? '1px solid var(--s-border)' : 'none',
               boxShadow: 'var(--s-card-shadow)',
             }}>
               {isLuxe && <p style={{ fontSize: 32, color: 'var(--s-primary)', marginBottom: 12, fontFamily: 'var(--s-heading-font)', lineHeight: 1 }}>"</p>}
-              <div style={{ color: '#fbbf24', fontSize: 14, marginBottom: 12 }}>{'★'.repeat(r.stars)}</div>
-              <p style={{ fontSize: 15, color: 'var(--s-text)', lineHeight: 1.7, marginBottom: 16, fontStyle: isLuxe ? 'italic' : 'normal', opacity: 0.85 }}>{r.text}</p>
-              <p style={{ fontWeight: 600, fontSize: 13, color: 'var(--s-primary)' }}>— {r.name}</p>
+              <div style={{ color: '#fbbf24', fontSize: 14, marginBottom: 12 }}>{'★'.repeat(r.rating ?? r.stars ?? 5)}</div>
+              <p style={{ fontSize: 15, color: 'var(--s-text)', lineHeight: 1.7, marginBottom: 16, fontStyle: isLuxe ? 'italic' : 'normal', opacity: 0.85 }}>{r.review_text ?? r.text}</p>
+              <p style={{ fontWeight: 600, fontSize: 13, color: 'var(--s-primary)' }}>— {r.customer_name ?? r.name}</p>
+              {r.created_at && <p style={{ fontSize: 11, color: 'var(--s-muted)', marginTop: 4 }}>{new Date(r.created_at).toLocaleDateString('en', { month: 'short', year: 'numeric' })}</p>}
             </div>
           ))}
         </div>
@@ -460,7 +467,7 @@ function Testimonials() {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function HomePage({ subdomain, restaurant, menuItems }: Props) {
+export default function HomePage({ subdomain, restaurant, menuItems, reviews = [] }: Props) {
   const { templateId } = useTheme();
 
   // ── Pearl theme — full premium layout ──────────────────────────────────────
@@ -471,7 +478,7 @@ export default function HomePage({ subdomain, restaurant, menuItems }: Props) {
         <PearlFeatures subdomain={subdomain} />
         <PearlDishes items={menuItems} subdomain={subdomain} />
         <AffiliateAdSection placement="homepage_section" title="Hand-Picked for Your Dining Experience" maxItems={3} />
-        <PearlTestimonials />
+        <PearlTestimonials reviews={reviews} />
         <PearlCTA subdomain={subdomain} />
       </div>
     );
@@ -485,7 +492,7 @@ export default function HomePage({ subdomain, restaurant, menuItems }: Props) {
       {templateId === 'bloom' && <BloomHero subdomain={subdomain} restaurant={restaurant} />}
       <PopularDishes items={menuItems} subdomain={subdomain} />
       <AffiliateAdSection placement="homepage_section" title="Recommended for You" maxItems={3} />
-      <Testimonials />
+      <Testimonials reviews={reviews} />
     </div>
   );
 }

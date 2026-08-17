@@ -10,6 +10,15 @@ interface FooterProps {
 }
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** Truncate to at most `maxWords` words, appending "…" if trimmed. */
+function truncateWords(text: string, maxWords = 120): string {
+  if (!text) return '';
+  const words = text.trim().split(/\s+/);
+  if (words.length <= maxWords) return text;
+  return words.slice(0, maxWords).join(' ') + '…';
+}
+
 const fmtTime = (t: string) => {
   if (!t) return '';
   const [h, m] = t.split(':');
@@ -25,12 +34,12 @@ function BloomFooter({ subdomain, restaurant, address, hours }: FooterProps) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 40, marginBottom: 40 }}>
           <div>
             <h3 style={{ fontFamily: 'var(--s-heading-font)', fontSize: 22, fontWeight: 700, marginBottom: 12 }}>{restaurant.restaurant_name}</h3>
-            {restaurant.description && <p style={{ fontSize: 14, opacity: 0.8, lineHeight: 1.7, marginBottom: 16 }}>{restaurant.description}</p>}
+            {restaurant.description && <p style={{ fontSize: 14, opacity: 0.8, lineHeight: 1.7, marginBottom: 16 }}>{truncateWords(restaurant.description)}</p>}
             <p style={{ fontSize: 13, opacity: 0.7 }}>📍 {[address?.city, address?.state].filter(Boolean).join(', ')}</p>
           </div>
           <div>
             <h4 style={{ fontWeight: 600, marginBottom: 12, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.7 }}>Quick Links</h4>
-            {[['', 'Home'], ['/menu', 'Food Menu'], ['/events', 'Events'], ['/blog', 'Blog'], ['/about', 'About & Hours'], ['/book', 'Book a Table']].map(([to, label]) => (
+            {[['', 'Home'], ['/menu', 'Food Menu'], ['/events', 'Events'], ['/blog', 'Blog'], ['/about', 'About'], ['/book', 'Book a Table']].map(([to, label]) => (
               <NavLink key={to} to={`${base}${to}`} style={{ display: 'block', color: '#fff', opacity: 0.8, textDecoration: 'none', fontSize: 14, marginBottom: 6, transition: 'opacity 0.15s' }}>{label}</NavLink>
             ))}
           </div>
@@ -69,11 +78,11 @@ function EmberFooter({ subdomain, restaurant, address, hours }: FooterProps) {
           <div>
             <h3 style={{ fontFamily: 'var(--s-heading-font)', fontSize: 28, fontWeight: 700, color: 'var(--s-accent)', marginBottom: 12, lineHeight: 1.2 }}>{restaurant.restaurant_name}</h3>
             {restaurant.cuisine_type && <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--s-primary)', marginBottom: 10 }}>{restaurant.cuisine_type}</p>}
-            {restaurant.description && <p style={{ fontSize: 14, color: 'var(--s-muted)', lineHeight: 1.7, marginBottom: 16 }}>{restaurant.description.substring(0, 120)}...</p>}
+            {restaurant.description && <p style={{ fontSize: 14, color: 'var(--s-muted)', lineHeight: 1.7, marginBottom: 16 }}>{truncateWords(restaurant.description)}</p>}
           </div>
           <div>
             <h4 style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--s-primary)', marginBottom: 16 }}>Navigate</h4>
-            {[['', 'Home'], ['/menu', 'Food Menu'], ['/events', 'Events & Tickets'], ['/blog', 'Stories & Blog'], ['/about', 'About & Hours'], ['/book', 'Book a Table']].map(([to, label]) => (
+            {[['', 'Home'], ['/menu', 'Food Menu'], ['/events', 'Events & Tickets'], ['/blog', 'Stories & Blog'], ['/about', 'About'], ['/book', 'Book a Table']].map(([to, label]) => (
               <NavLink key={to} to={`${base}${to}`} style={{ display: 'block', color: 'var(--s-muted)', textDecoration: 'none', fontSize: 14, marginBottom: 8 }}>{label}</NavLink>
             ))}
           </div>

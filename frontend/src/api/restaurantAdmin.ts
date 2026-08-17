@@ -115,6 +115,16 @@ export const rCmsApi = {
   uploadEventImage: (formData: FormData) => rApi.post('/menu/upload-image', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
+  // About page
+  getAboutPage:    ()                    => rApi.get('/cms/about-page'),
+  updateAboutPage: (data: object)        => rApi.put('/cms/about-page', data),
+  uploadAboutImage:(formData: FormData)  => rApi.post('/cms/about-image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  // Reviews management
+  getReviews:    ()            => rApi.get('/cms/reviews'),
+  deleteReview:  (id: number)  => rApi.delete(`/cms/reviews/${id}`),
+  toggleReview:  (id: number, is_approved: boolean) => rApi.patch(`/cms/reviews/${id}`, { is_approved }),
 };
 
 // ── Orders ────────────────────────────────────────────────────────────────────

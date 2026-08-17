@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
 import { imageUrl } from '../../../utils/imageUrl';
 
@@ -17,7 +17,7 @@ const NAV_LINKS = [
   { to: '/menu',        label: 'Food Menu' },
   { to: '/events',      label: 'Events & Tickets' },
   { to: '/blog',        label: 'Stories & Blog' },
-  { to: '/about',       label: 'About & Hours' },
+  { to: '/about',       label: 'About' },
   { to: '/track',       label: 'Track' },
 ];
 
@@ -220,20 +220,24 @@ function PearlNav({ subdomain, restaurantName, logo, cartCount, onCartClick, has
   }, []);
 
   const base = `/s/${subdomain}`;
+  const location = useLocation();
+  // Only the home page has the full-bleed hero behind the nav — all other pages need opaque nav
+  const isHome = location.pathname === base || location.pathname === base + '/';
+  const transparent = isHome && !scrolled;
 
   // ── Colour tokens that flip between transparent-over-video and opaque ──────
-  const linkColor      = scrolled ? 'var(--s-muted)'   : 'rgba(255,255,255,0.82)';
-  const linkActive     = scrolled ? 'var(--s-primary)'  : '#ffffff';
-  const nameColor      = scrolled ? 'var(--s-text)'     : '#ffffff';
-  const ctaBorder      = scrolled ? 'rgba(0,0,0,0.15)'  : 'rgba(255,255,255,0.5)';
-  const ctaColor       = scrolled ? 'var(--s-text)'     : '#ffffff';
+  const linkColor  = transparent ? 'rgba(255,255,255,0.82)' : 'var(--s-muted)';
+  const linkActive = transparent ? '#ffffff'                 : 'var(--s-primary)';
+  const nameColor  = transparent ? '#ffffff'                 : 'var(--s-text)';
+  const ctaBorder  = transparent ? 'rgba(255,255,255,0.5)'  : 'rgba(0,0,0,0.15)';
+  const ctaColor   = transparent ? '#ffffff'                 : 'var(--s-text)';
 
   return (
     <nav style={{
       position: 'sticky', top: 0, zIndex: 100,
-      backgroundColor: scrolled ? 'var(--s-nav-bg)' : 'transparent',
-      backdropFilter:  scrolled ? 'blur(14px)'       : 'none',
-      borderBottom:    scrolled ? '1px solid var(--s-border)' : 'none',
+      backgroundColor: transparent ? 'transparent' : 'var(--s-nav-bg)',
+      backdropFilter:  transparent ? 'none'         : 'blur(14px)',
+      borderBottom:    transparent ? 'none'          : '1px solid var(--s-border)',
       transition: 'background-color 0.4s ease, border-color 0.4s ease, backdrop-filter 0.4s ease',
     }}>
       <div style={{

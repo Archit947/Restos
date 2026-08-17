@@ -6,9 +6,11 @@ import SEOTab from './tabs/SEOTab';
 import BlogTab from './tabs/BlogTab';
 import ReservationsTab from './tabs/ReservationsTab';
 import EventsTab from './tabs/EventsTab';
+import AboutPageTab from './tabs/AboutPageTab';
 
 const TABS = [
   { id: 'info',         label: 'Structured Info & Hours', icon: '🏪' },
+  { id: 'about',        label: 'About Page',              icon: '📄' },
   { id: 'menu',         label: 'Menu',                    icon: '🍽' },
   { id: 'seo',          label: 'SEO & Search Meta',       icon: '🔍' },
   { id: 'blog',         label: 'Blog & Articles',         icon: '📝' },
@@ -48,6 +50,7 @@ export default function WebsiteCMSPage() {
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto">
         {active === 'info'         && <InfoHoursTab />}
+        {active === 'about'        && <AboutPageTab />}
         {active === 'menu'         && <MenuSettingsTab />}
         {active === 'seo'          && <SEOTab />}
         {active === 'blog'         && <BlogTab />}

@@ -288,6 +288,7 @@ CREATE TABLE IF NOT EXISTS websites (
   facebook_pixel    VARCHAR(100),
   custom_css        TEXT,
   custom_js         TEXT,
+  about_content     TEXT,
   published_at      TIMESTAMPTZ,
   created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
@@ -709,7 +710,23 @@ CREATE TABLE IF NOT EXISTS affiliate_products (
 SELECT create_updated_at_trigger('affiliate_products');
 
 -- ============================================================
--- 29. AFFILIATE CLICKS
+-- 29. RESTAURANT REVIEWS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS restaurant_reviews (
+  id            SERIAL PRIMARY KEY,
+  restaurant_id INT          NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+  tenant_id     VARCHAR(36)  NOT NULL,
+  customer_name VARCHAR(100) NOT NULL,
+  review_text   TEXT         NOT NULL,
+  rating        SMALLINT     NOT NULL DEFAULT 5 CHECK (rating BETWEEN 1 AND 5),
+  order_number  VARCHAR(20),
+  is_approved   BOOLEAN      NOT NULL DEFAULT TRUE,
+  created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_reviews_restaurant ON restaurant_reviews(restaurant_id, is_approved);
+
+-- ============================================================
+-- 30. AFFILIATE CLICKS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS affiliate_clicks (
   id          BIGSERIAL PRIMARY KEY,

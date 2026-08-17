@@ -309,4 +309,46 @@ router.post('/:subdomain/store/orders', async (req, res) => {
   }
 });
 
+// ─── GET /:subdomain/about-content ───────────────────────────────────────────
+router.get('/:subdomain/about-content', async (req, res) => {
+  try {
+    const restaurant = await resolveRestaurant(req.params.subdomain);
+    if (!restaurant) return notFound(res, 'Restaurant not found.');
+    const site = await queryOne('SELECT about_content FROM websites WHERE restaurant_id = ?', [restaurant.id]);
+    let blocks = [];
+    try { blocks = site?.about_content ? JSON.parse(site.about_content) : []; } catch {}
+    return success(res, { blocks });
+  } catch (err) { return serverError(res, err.message); }
+});
+
+// ─── GET /:subdomain/reviews ──────────────────────────────────────────────────
+router.get('/:subdomain/reviews', async (req, res) => {
+  try {
+    const restaurant = await resolveRestaurant(req.params.subdomain);
+    if (!restaurant) return notFound(res, 'Restaurant not found.');
+    const [rows] = await query(
+      'SELECT id, customer_name, review_text, rating, created_at FROM restaurant_reviews WHERE restaurant_id = ? AND is_approved = true ORDER BY created_at DESC LIMIT 12',
+      [restaurant.id]
+    );
+    return success(res, rows);
+  } catch (err) { return serverError(res, err.message); }
+});
+
+// ─── POST /:subdomain/reviews — submit a review ───────────────────────────────
+router.post('/:subdomain/reviews', async (req, res) => {
+  try {
+    const restaurant = await resolveRestaurant(req.params.subdomain);
+    if (!restaurant) return notFound(res, 'Restaurant not found.');
+    const { customer_name, review_text, rating = 5, order_number } = req.body;
+    if (!customer_name?.trim()) return badRequest(res, 'Name is required.');
+    if (!review_text?.trim())   return badRequest(res, 'Review text is required.');
+    const r = Math.min(5, Math.max(1, parseInt(rating) || 5));
+    await query(
+      'INSERT INTO restaurant_reviews (restaurant_id, tenant_id, customer_name, review_text, rating, order_number) VALUES (?, ?, ?, ?, ?, ?)',
+      [restaurant.id, restaurant.tenant_id, customer_name.trim(), review_text.trim(), r, order_number || null]
+    );
+    return success(res, null, 'Thank you for your review!');
+  } catch (err) { return serverError(res, err.message); }
+});
+
 module.exports = router;
