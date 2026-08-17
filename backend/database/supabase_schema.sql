@@ -699,6 +699,7 @@ CREATE TABLE IF NOT EXISTS affiliate_products (
   placement     VARCHAR(50)   NOT NULL DEFAULT 'sidebar',
   status        VARCHAR(20)   NOT NULL DEFAULT 'active',
   priority      INT           NOT NULL DEFAULT 0,
+  click_count   INT           NOT NULL DEFAULT 0,
   start_date    DATE,
   end_date      DATE,
   created_by    INT,
@@ -706,6 +707,20 @@ CREATE TABLE IF NOT EXISTS affiliate_products (
   updated_at    TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 SELECT create_updated_at_trigger('affiliate_products');
+
+-- ============================================================
+-- 29. AFFILIATE CLICKS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS affiliate_clicks (
+  id          BIGSERIAL PRIMARY KEY,
+  product_id  INT          NOT NULL REFERENCES affiliate_products(id) ON DELETE CASCADE,
+  placement   VARCHAR(50),
+  ip_address  VARCHAR(50),
+  user_agent  VARCHAR(500),
+  clicked_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_affiliate_clicks_product ON affiliate_clicks(product_id);
+CREATE INDEX IF NOT EXISTS idx_affiliate_clicks_time   ON affiliate_clicks(clicked_at);
 
 -- ============================================================
 -- 29. AUDIT LOGS
