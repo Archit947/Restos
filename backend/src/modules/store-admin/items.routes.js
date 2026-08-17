@@ -144,7 +144,7 @@ router.post('/', withUpload, async (req, res) => {
     if (!name?.trim()) return badRequest(res, 'Item name is required.');
     if (!price || isNaN(Number(price))) return badRequest(res, 'Valid price is required.');
 
-    const imageFilename = req.file?.filename || null;
+    const imageFilename = req.file?.publicUrl || null;
 
     const [result] = await query(
       `INSERT INTO store_items
@@ -176,7 +176,7 @@ router.patch('/:id', withUpload, async (req, res) => {
     if (!item) return notFound(res, 'Item not found.');
 
     const { name, description, price, currency, category_id, stock_quantity, is_available, is_featured, sort_order } = req.body;
-    const imageFilename = req.file?.filename || undefined;
+    const imageFilename = req.file?.publicUrl || undefined;
 
     await query(
       `UPDATE store_items SET
