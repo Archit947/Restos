@@ -42,11 +42,11 @@ router.get('/', async (req, res) => {
 
     return success(res, {
       stats: {
-        totalItems:    itemCount[0]?.cnt    || 0,
-        totalCategories: catCount[0]?.cnt  || 0,
-        totalOrders:   orderCount[0]?.cnt  || 0,
-        pendingOrders: pendingCount[0]?.cnt || 0,
-        totalRevenue:  Number(revenue[0]?.total) || 0,
+        totalItems:      itemCount?.cnt       || 0,
+        totalCategories: catCount?.cnt        || 0,
+        totalOrders:     orderCount?.cnt      || 0,
+        pendingOrders:   pendingCount?.cnt    || 0,
+        totalRevenue:    Number(revenue?.total) || 0,
       },
       recentOrders,
       lowStockItems: lowStock,
