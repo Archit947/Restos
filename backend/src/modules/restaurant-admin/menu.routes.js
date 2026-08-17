@@ -7,8 +7,7 @@ const { query, queryOne } = require('../../config/database');
 const { authenticateRestaurant } = require('../../middleware/restaurantAuth.middleware');
 const { success, created, badRequest, notFound, serverError } = require('../../utils/apiResponse');
 const multer = require('multer');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+const { createStorage } = require('../../middleware/upload.middleware');
 const config = require('../../config/env');
 
 router.use(authenticateRestaurant);
@@ -17,24 +16,14 @@ router.use(authenticateRestaurant);
 // CATEGORIES
 // ═══════════════════════════════════════════════════════════════
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, config.UPLOAD.PATH),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${uuidv4()}${ext}`);
-  },
-});
-
+// Use Supabase storage engine — files go to the 'menu' folder in the bucket
 const upload = multer({
-  storage,
+  storage: createStorage('menu'),
   limits: { fileSize: (config.UPLOAD.MAX_FILE_SIZE_MB || 5) * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-    if (allowed.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Only image files are allowed'));
   },
 });
 
