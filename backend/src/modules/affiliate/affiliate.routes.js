@@ -174,23 +174,23 @@ router.get('/admin/stats', authenticate, requireAdmin, async (req, res) => {
     const today = new Date().toISOString().slice(0, 10);
     const [statsRows] = await query(`
       SELECT
-        COUNT(*)                                              AS total,
-        SUM(status = 'active')                               AS active,
-        SUM(status = 'inactive')                             AS inactive,
-        SUM(status = 'draft')                                AS draft,
-        SUM(status = 'scheduled' AND (start_date IS NULL OR start_date > ?)) AS scheduled,
-        SUM(COALESCE(click_count, 0))                        AS total_clicks
+        COUNT(*)                                                                        AS total,
+        COUNT(*) FILTER (WHERE status = 'active')                                      AS active,
+        COUNT(*) FILTER (WHERE status = 'inactive')                                    AS inactive,
+        COUNT(*) FILTER (WHERE status = 'draft')                                       AS draft,
+        COUNT(*) FILTER (WHERE status = 'scheduled' AND (start_date IS NULL OR start_date > ?)) AS scheduled,
+        COALESCE(SUM(click_count), 0)                                                  AS total_clicks
       FROM affiliate_products
     `, [today]);
     const totals = statsRows[0] || {};
 
-    // Recent clicks
+    // Recent clicks (last 7 days)
     const [recentClicks] = await query(`
       SELECT ap.title, COUNT(ac.id) AS clicks
       FROM affiliate_clicks ac
       JOIN affiliate_products ap ON ap.id = ac.product_id
-      WHERE ac.clicked_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-      GROUP BY ap.id
+      WHERE ac.clicked_at >= NOW() - INTERVAL '7 days'
+      GROUP BY ap.id, ap.title
       ORDER BY clicks DESC
       LIMIT 5
     `);

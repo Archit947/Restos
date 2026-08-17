@@ -491,7 +491,7 @@ export function AffiliateAdsPage() {
                       ) : <span className="text-gray-300">Always</span>}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className="font-semibold text-brand-600">{p.click_count.toLocaleString()}</span>
+                      <span className="font-semibold text-brand-600">{Number(p.click_count || 0).toLocaleString()}</span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1 justify-end flex-wrap">
