@@ -141,6 +141,20 @@ router.post('/admin/fetch', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
+// GET /affiliate/admin/restaurants — list all restaurants for targeting picker
+router.get('/admin/restaurants', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const [rows] = await query(
+      `SELECT r.id, r.restaurant_name, s.subdomain
+       FROM restaurants r
+       LEFT JOIN subdomains s ON s.restaurant_id = r.id
+       WHERE r.account_status = 'active'
+       ORDER BY r.restaurant_name ASC`
+    );
+    return success(res, rows);
+  } catch (err) { return serverError(res, err.message); }
+});
+
 // GET /affiliate/admin — list all products with filters
 router.get('/admin', authenticate, requireAdmin, async (req, res) => {
   try {
@@ -150,19 +164,34 @@ router.get('/admin', authenticate, requireAdmin, async (req, res) => {
     const offset = (pg - 1) * lim;
 
     const where = []; const params = [];
-    if (search)    { where.push('(title LIKE ? OR brand LIKE ? OR asin LIKE ?)'); const s = `%${search}%`; params.push(s, s, s); }
-    if (placement) { where.push('placement = ?'); params.push(placement); }
-    if (status)    { where.push('status = ?'); params.push(status); }
+    if (search)    { where.push('(ap.title LIKE ? OR ap.brand LIKE ? OR ap.asin LIKE ?)'); const s = `%${search}%`; params.push(s, s, s); }
+    if (placement) { where.push('ap.placement = ?'); params.push(placement); }
+    if (status)    { where.push('ap.status = ?'); params.push(status); }
 
     const wc = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const [cntResult, listResult] = await Promise.all([
-      query(`SELECT COUNT(*) AS total FROM affiliate_products ${wc}`, params),
-      query(`SELECT * FROM affiliate_products ${wc} ORDER BY priority ASC, created_at DESC LIMIT ? OFFSET ?`,
+      query(`SELECT COUNT(*) AS total FROM affiliate_products ap ${wc}`, params),
+      query(`SELECT ap.* FROM affiliate_products ap ${wc} ORDER BY ap.priority ASC, ap.created_at DESC LIMIT ? OFFSET ?`,
         [...params, lim, offset]),
     ]);
 
-    const cnt  = cntResult[0];    // array of rows from COUNT query
-    const rows = listResult[0];   // array of all product rows
+    const cnt  = cntResult[0];
+    const rows = listResult[0];
+
+    // Attach targeted restaurant_ids for each product
+    if (rows.length > 0) {
+      const ids = rows.map(r => r.id);
+      const [targeting] = await query(
+        `SELECT product_id, restaurant_id FROM affiliate_product_restaurants WHERE product_id = ANY(?)`,
+        [ids]
+      );
+      const map = {};
+      for (const t of targeting) {
+        if (!map[t.product_id]) map[t.product_id] = [];
+        map[t.product_id].push(t.restaurant_id);
+      }
+      for (const r of rows) r.restaurant_ids = map[r.id] || [];
+    }
 
     return paginated(res, rows, buildPaginationMeta(pg, lim, cnt[0]?.total || 0));
   } catch (err) { return serverError(res, err.message); }
@@ -204,6 +233,10 @@ router.get('/admin/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const p = await queryOne('SELECT * FROM affiliate_products WHERE id = ?', [req.params.id]);
     if (!p) return notFound(res, 'Product not found.');
+    const [targeting] = await query(
+      'SELECT restaurant_id FROM affiliate_product_restaurants WHERE product_id = ?', [p.id]
+    );
+    p.restaurant_ids = targeting.map(t => t.restaurant_id);
     return success(res, p);
   } catch (err) { return serverError(res, err.message); }
 });
@@ -216,6 +249,7 @@ router.post('/admin', authenticate, requireAdmin, async (req, res) => {
       price, currency = '₹', rating, brand,
       placement = 'homepage_section', status = 'draft',
       priority = 10, start_date, end_date,
+      restaurant_ids = [],   // [] = all restaurants, [1,2,3] = targeted
     } = req.body;
 
     if (!affiliate_url) return badRequest(res, 'affiliate_url is required.');
@@ -232,7 +266,22 @@ router.post('/admin', authenticate, requireAdmin, async (req, res) => {
        req.user.id]
     );
 
-    const product = await queryOne('SELECT * FROM affiliate_products WHERE id = ?', [r.insertId]);
+    const productId = r.insertId;
+
+    // Insert restaurant targeting rows
+    if (Array.isArray(restaurant_ids) && restaurant_ids.length > 0) {
+      for (const rid of restaurant_ids) {
+        await query(
+          'INSERT INTO affiliate_product_restaurants (product_id, restaurant_id) VALUES (?, ?) ON CONFLICT DO NOTHING',
+          [productId, rid]
+        );
+      }
+    }
+
+    const product = await queryOne('SELECT * FROM affiliate_products WHERE id = ?', [productId]);
+    const [targeting] = await query('SELECT restaurant_id FROM affiliate_product_restaurants WHERE product_id = ?', [productId]);
+    product.restaurant_ids = targeting.map(t => t.restaurant_id);
+
     return created(res, product, 'Affiliate product created.');
   } catch (err) { return serverError(res, err.message); }
 });
@@ -244,6 +293,7 @@ router.put('/admin/:id', authenticate, requireAdmin, async (req, res) => {
       affiliate_url, asin, title, description, image_url,
       price, currency, rating, brand,
       placement, status, priority, start_date, end_date,
+      restaurant_ids,  // undefined = don't touch, [] = all, [1,2] = targeted
     } = req.body;
 
     await query(
@@ -277,7 +327,21 @@ router.put('/admin/:id', authenticate, requireAdmin, async (req, res) => {
        req.params.id]
     );
 
+    // Replace restaurant targeting if provided
+    if (Array.isArray(restaurant_ids)) {
+      await query('DELETE FROM affiliate_product_restaurants WHERE product_id = ?', [req.params.id]);
+      for (const rid of restaurant_ids) {
+        await query(
+          'INSERT INTO affiliate_product_restaurants (product_id, restaurant_id) VALUES (?, ?) ON CONFLICT DO NOTHING',
+          [req.params.id, rid]
+        );
+      }
+    }
+
     const product = await queryOne('SELECT * FROM affiliate_products WHERE id = ?', [req.params.id]);
+    const [targeting] = await query('SELECT restaurant_id FROM affiliate_product_restaurants WHERE product_id = ?', [req.params.id]);
+    product.restaurant_ids = targeting.map(t => t.restaurant_id);
+
     return success(res, product, 'Updated.');
   } catch (err) { return serverError(res, err.message); }
 });
@@ -305,28 +369,35 @@ router.delete('/admin/:id', authenticate, requireAdmin, async (req, res) => {
 // PUBLIC routes (no auth — served on public site)
 // ──────────────────────────────────────────────────────────────────────────────
 
-// GET /affiliate/public — active products for a placement
+// GET /affiliate/public — active products for a placement, optionally filtered by restaurant
 router.get('/public', async (req, res) => {
   try {
-    const { placement, limit = 6 } = req.query;
+    const { placement, limit = 6, restaurant_id } = req.query;
     const today = new Date().toISOString().slice(0, 10);
 
-    const where = [`status = 'active'`];
+    const where = [`ap.status = 'active'`];
     const params = [];
 
-    if (placement) { where.push('placement = ?'); params.push(placement); }
+    if (placement)     { where.push('ap.placement = ?'); params.push(placement); }
+    where.push('(ap.start_date IS NULL OR ap.start_date <= ?)'); params.push(today);
+    where.push('(ap.end_date   IS NULL OR ap.end_date   >= ?)'); params.push(today);
 
-    // Respect start/end dates
-    where.push('(start_date IS NULL OR start_date <= ?)'); params.push(today);
-    where.push('(end_date   IS NULL OR end_date   >= ?)'); params.push(today);
+    // Restaurant targeting: show if product targets this restaurant OR targets nobody (= all)
+    if (restaurant_id) {
+      where.push(`(
+        NOT EXISTS (SELECT 1 FROM affiliate_product_restaurants apr WHERE apr.product_id = ap.id)
+        OR EXISTS  (SELECT 1 FROM affiliate_product_restaurants apr WHERE apr.product_id = ap.id AND apr.restaurant_id = ?)
+      )`);
+      params.push(restaurant_id);
+    }
 
     const lim = Math.min(parseInt(limit) || 6, 20);
     const [rows] = await query(
-      `SELECT id, title, description, image_url, price, currency, rating, brand,
-              affiliate_url, placement, priority
-       FROM affiliate_products
+      `SELECT ap.id, ap.title, ap.description, ap.image_url, ap.price, ap.currency,
+              ap.rating, ap.brand, ap.affiliate_url, ap.placement, ap.priority
+       FROM affiliate_products ap
        WHERE ${where.join(' AND ')}
-       ORDER BY priority ASC, id DESC
+       ORDER BY ap.priority ASC, ap.id DESC
        LIMIT ?`,
       [...params, lim]
     );

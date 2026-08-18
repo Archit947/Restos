@@ -54,6 +54,7 @@ function ProductModal({ product, onClose, onSaved }: ModalProps) {
   const isEdit = Boolean(product);
   const [fetchUrl, setFetchUrl] = useState(product?.affiliate_url || '');
   const [fetching, setFetching] = useState(false);
+  const [selectedRestaurantIds, setSelectedRestaurantIds] = useState<number[]>(product?.restaurant_ids || []);
   const [form, setForm] = useState<Partial<AffiliateProduct>>({
     affiliate_url: product?.affiliate_url || '',
     asin:          product?.asin || '',
@@ -70,6 +71,20 @@ function ProductModal({ product, onClose, onSaved }: ModalProps) {
     start_date:    product?.start_date || '',
     end_date:      product?.end_date || '',
   });
+
+  // Load all restaurants for the targeting picker
+  const { data: restaurantsData } = useQuery({
+    queryKey: ['affiliate-restaurants'],
+    queryFn: () => affiliateAdminApi.getRestaurants().then(r => r.data.data),
+    staleTime: 5 * 60 * 1000,
+  });
+  const allRestaurants = restaurantsData || [];
+
+  function toggleRestaurant(id: number) {
+    setSelectedRestaurantIds(prev =>
+      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
+    );
+  }
 
   const qc = useQueryClient();
   const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
@@ -101,7 +116,7 @@ function ProductModal({ product, onClose, onSaved }: ModalProps) {
 
   const saveMut = useMutation({
     mutationFn: (status: AffiliateStatus) => {
-      const payload = { ...form, status };
+      const payload = { ...form, status, restaurant_ids: selectedRestaurantIds };
       return isEdit
         ? affiliateAdminApi.update(product!.id, payload)
         : affiliateAdminApi.create(payload);
@@ -247,6 +262,47 @@ function ProductModal({ product, onClose, onSaved }: ModalProps) {
                 <input className={inputCls} type="date" value={form.end_date || ''} onChange={e => set('end_date', e.target.value || null)} />
               </div>
             </div>
+          </div>
+
+          {/* ── Restaurant targeting ── */}
+          <div className="border-t pt-5">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Restaurant Targeting</p>
+              {selectedRestaurantIds.length > 0 && (
+                <button onClick={() => setSelectedRestaurantIds([])}
+                  className="text-xs text-red-500 hover:text-red-700 underline">
+                  Clear (show to all)
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mb-3">
+              {selectedRestaurantIds.length === 0
+                ? '✅ Showing to all restaurants. Select specific ones to restrict.'
+                : `📌 Showing to ${selectedRestaurantIds.length} restaurant${selectedRestaurantIds.length > 1 ? 's' : ''} only.`}
+            </p>
+            {allRestaurants.length === 0 ? (
+              <p className="text-xs text-gray-400 italic">Loading restaurants…</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                {allRestaurants.map(r => {
+                  const checked = selectedRestaurantIds.includes(r.id);
+                  return (
+                    <label key={r.id}
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
+                        checked ? 'border-brand-400 bg-brand-50' : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
+                    >
+                      <input type="checkbox" checked={checked} onChange={() => toggleRestaurant(r.id)}
+                        className="accent-brand-600 w-4 h-4 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{r.restaurant_name}</p>
+                        {r.subdomain && <p className="text-[11px] text-gray-400 truncate">{r.subdomain}</p>}
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -447,6 +503,7 @@ export function AffiliateAdsPage() {
                   <th className="px-4 py-3 font-semibold text-gray-600">Placement</th>
                   <th className="px-4 py-3 font-semibold text-gray-600">Status</th>
                   <th className="px-4 py-3 font-semibold text-gray-600">Dates</th>
+                  <th className="px-4 py-3 font-semibold text-gray-600">Targeting</th>
                   <th className="px-4 py-3 font-semibold text-gray-600 text-center">Clicks</th>
                   <th className="px-4 py-3 font-semibold text-gray-600 text-right">Actions</th>
                 </tr>
@@ -489,6 +546,15 @@ export function AffiliateAdsPage() {
                           {p.end_date   && <p>To: {p.end_date}</p>}
                         </div>
                       ) : <span className="text-gray-300">Always</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      {!p.restaurant_ids || p.restaurant_ids.length === 0 ? (
+                        <span className="text-xs text-gray-400">All restaurants</span>
+                      ) : (
+                        <span className="text-xs font-medium text-brand-700 bg-brand-50 border border-brand-200 px-2 py-0.5 rounded-full">
+                          {p.restaurant_ids.length} restaurant{p.restaurant_ids.length > 1 ? 's' : ''}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className="font-semibold text-brand-600">{Number(p.click_count || 0).toLocaleString()}</span>

@@ -11,7 +11,7 @@ function parseLocal(d: string | null | undefined): Date {
   return new Date(String(d).replace(/Z$/, '').replace(/[+-]\d{2}:\d{2}$/, ''));
 }
 
-interface Props { subdomain: string; posts: any[]; }
+interface Props { subdomain: string; posts: any[]; restaurantId?: number; }
 
 function PostCard({ post, onOpen }: { post: any; onOpen: () => void }) {
   const { templateId } = useTheme();
@@ -219,7 +219,7 @@ function PostModal({ subdomain, slug, onClose }: { subdomain: string; slug: stri
   );
 }
 
-export default function BlogPage({ subdomain, posts }: Props) {
+export default function BlogPage({ subdomain, posts, restaurantId }: Props) {
   const { templateId } = useTheme();
   const isLuxe = templateId === 'luxe';
   const [openSlug, setOpenSlug] = useState<string | null>(null);
@@ -264,7 +264,7 @@ export default function BlogPage({ subdomain, posts }: Props) {
         <PostModal subdomain={subdomain} slug={openSlug} onClose={() => setOpenSlug(null)} />
       )}
     </div>
-    <AffiliateAdSection placement="blog_page" title="You Might Also Like" maxItems={3} />
+    <AffiliateAdSection placement="blog_page" title="You Might Also Like" maxItems={3} restaurantId={restaurantId} />
     </>
   );
 }

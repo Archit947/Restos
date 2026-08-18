@@ -7,12 +7,13 @@ interface AffiliateAdSectionProps {
   placement: AffiliatePlacement;
   title?: string;
   maxItems?: number;
+  restaurantId?: number;
 }
 
-export function AffiliateAdSection({ placement, title = 'Recommended for You', maxItems = 3 }: AffiliateAdSectionProps) {
+export function AffiliateAdSection({ placement, title = 'Recommended for You', maxItems = 3, restaurantId }: AffiliateAdSectionProps) {
   const { data, isLoading } = useQuery({
-    queryKey: ['affiliate-ads', placement],
-    queryFn: () => affiliatePublicApi.getByPlacement(placement, maxItems).then(r => r.data.data),
+    queryKey: ['affiliate-ads', placement, restaurantId],
+    queryFn: () => affiliatePublicApi.getByPlacement(placement, maxItems, restaurantId).then(r => r.data.data),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 

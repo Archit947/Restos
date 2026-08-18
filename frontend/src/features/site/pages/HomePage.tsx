@@ -9,6 +9,7 @@ interface Props {
   restaurant: any;
   menuItems: any[];
   reviews?: any[];
+  restaurantId?: number;
 }
 
 // ─── Hero variants ────────────────────────────────────────────────────────────
@@ -467,7 +468,7 @@ function Testimonials({ reviews: propReviews }: { reviews?: any[] }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function HomePage({ subdomain, restaurant, menuItems, reviews = [] }: Props) {
+export default function HomePage({ subdomain, restaurant, menuItems, reviews = [], restaurantId }: Props) {
   const { templateId } = useTheme();
 
   // ── Pearl theme — full premium layout ──────────────────────────────────────
@@ -477,7 +478,7 @@ export default function HomePage({ subdomain, restaurant, menuItems, reviews = [
         <PearlHero restaurant={restaurant} />
         <PearlFeatures subdomain={subdomain} />
         <PearlDishes items={menuItems} subdomain={subdomain} />
-        <AffiliateAdSection placement="homepage_section" title="Hand-Picked for Your Dining Experience" maxItems={3} />
+        <AffiliateAdSection placement="homepage_section" title="Hand-Picked for Your Dining Experience" maxItems={3} restaurantId={restaurantId} />
         <PearlTestimonials reviews={reviews} />
         <PearlCTA subdomain={subdomain} />
       </div>
@@ -491,7 +492,7 @@ export default function HomePage({ subdomain, restaurant, menuItems, reviews = [
       {templateId === 'luxe'  && <LuxeHero  subdomain={subdomain} restaurant={restaurant} />}
       {templateId === 'bloom' && <BloomHero subdomain={subdomain} restaurant={restaurant} />}
       <PopularDishes items={menuItems} subdomain={subdomain} />
-      <AffiliateAdSection placement="homepage_section" title="Recommended for You" maxItems={3} />
+      <AffiliateAdSection placement="homepage_section" title="Recommended for You" maxItems={3} restaurantId={restaurantId} />
       <Testimonials reviews={reviews} />
     </div>
   );

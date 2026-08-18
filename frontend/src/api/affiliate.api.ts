@@ -33,6 +33,13 @@ export interface AffiliateProduct {
   click_count: number;
   created_at: string;
   updated_at: string;
+  restaurant_ids?: number[];   // [] or undefined = all restaurants; [1,2] = targeted
+}
+
+export interface AffiliateRestaurant {
+  id: number;
+  restaurant_name: string;
+  subdomain: string | null;
 }
 
 export interface AffiliateFetchResult {
@@ -72,10 +79,13 @@ export const affiliateAdminApi = {
   stats: () =>
     api.get<{ data: AffiliateStats }>(`${BASE}/admin/stats`),
 
-  create: (data: Partial<AffiliateProduct>) =>
+  getRestaurants: () =>
+    api.get<{ data: AffiliateRestaurant[] }>(`${BASE}/admin/restaurants`),
+
+  create: (data: Partial<AffiliateProduct> & { restaurant_ids?: number[] }) =>
     api.post<{ data: AffiliateProduct }>(`${BASE}/admin`, data),
 
-  update: (id: number, data: Partial<AffiliateProduct>) =>
+  update: (id: number, data: Partial<AffiliateProduct> & { restaurant_ids?: number[] }) =>
     api.put<{ data: AffiliateProduct }>(`${BASE}/admin/${id}`, data),
 
   setStatus: (id: number, status: AffiliateStatus) =>
@@ -88,8 +98,8 @@ export const affiliateAdminApi = {
 // ── Public API (used on public restaurant sites) ───────────────────────────────
 
 export const affiliatePublicApi = {
-  getByPlacement: (placement: AffiliatePlacement, limit = 6) =>
-    api.get<{ data: AffiliateProduct[] }>(`${BASE}/public`, { params: { placement, limit } }),
+  getByPlacement: (placement: AffiliatePlacement, limit = 6, restaurantId?: number) =>
+    api.get<{ data: AffiliateProduct[] }>(`${BASE}/public`, { params: { placement, limit, restaurant_id: restaurantId } }),
 
   trackClick: (id: number, placement: AffiliatePlacement) =>
     api.post<{ data: { redirect_url: string } }>(`${BASE}/public/${id}/click`, { placement }),

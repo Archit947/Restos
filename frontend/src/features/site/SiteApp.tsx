@@ -75,12 +75,12 @@ function SiteLoader() {
       {/* Pearl hero overlaps the sticky nav (nav is transparent at top). Other themes need the padding offset. */}
       <div style={{ paddingTop: templateId === 'pearl' ? 0 : 64 }}>
         <Routes>
-          <Route index element={<HomePage subdomain={sub} restaurant={restaurant} menuItems={menuItems} reviews={reviews} />} />
+          <Route index element={<HomePage subdomain={sub} restaurant={restaurant} menuItems={menuItems} reviews={reviews} restaurantId={restaurant.id} />} />
           <Route path="menu" element={
             <FoodMenuPage subdomain={sub} categories={categories} items={menuItems} cart={cartItems} onAddToCart={handleAddToCart} />
           } />
           <Route path="events" element={<EventsPage subdomain={sub} events={events} />} />
-          <Route path="blog" element={<BlogPage subdomain={sub} posts={posts} />} />
+          <Route path="blog" element={<BlogPage subdomain={sub} posts={posts} restaurantId={restaurant.id} />} />
           <Route path="about" element={<AboutPage restaurant={restaurant} hours={hours || []} address={address} blocks={blocks} />} />
           <Route path="track" element={<TrackPage subdomain={sub} />} />
           <Route path="book"  element={<BookTablePage subdomain={sub} restaurant={restaurant} />} />
